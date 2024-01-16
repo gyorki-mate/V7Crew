@@ -1,5 +1,7 @@
 package com.example.v7crew;
 
+import static android.content.ContentValues.TAG;
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -8,6 +10,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.hardware.usb.UsbManager;
 import android.icu.util.Output;
 import android.os.Bundle;
 import android.util.Log;
@@ -57,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         button.setOnClickListener(v -> CloseService());
-        button2.setOnClickListener(v -> writeConfig());
+        button2.setOnClickListener(v -> performUsbInteraction());
         initializeApp(appContext);
 
     }
@@ -86,35 +89,36 @@ public class MainActivity extends AppCompatActivity {
         aeeBinder = new AEEService().new AEEBinder();
 
         // Call the pairing simulation method
-        simulatePairing("123456"); // Replace with the
+//        simulatePairing("123456"); // Replace with the
 
         Log.w("MainActivity", "startService() called successfully");
         boolean bindServiceResult = appContext.bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE | Context.BIND_IMPORTANT);
         if (bindServiceResult) {
             Log.i("MainActivity", "bindService() called successfully");
-            hidItem = new HidItem(getApplicationContext());
-            try {
-                hidItem.setProductID((short) 00001);
-                hidItem.setVendorID((short) 00001);
-
-                hidItem.open();
-
-                byte[] dataToSend = "Hello, Printer!".getBytes();
-                hidItem.writeBuffer(dataToSend, 0, dataToSend.length);
-                ByteArrayOutputStream receivedData = new ByteArrayOutputStream();
-                int bytesRead = hidItem.readBuffer(receivedData, 1000); // 1000ms timeout
-                if (bytesRead > 0) {
-                    Log.d("YourActivity", "Received data: " + receivedData.toString());
-                } else {
-                    Log.d("YourActivity", "No data received within the timeout");
-                }
-            } catch (Exception e) {
-                Log.d("MainActivity", "initializeApp: " + e.getMessage());
+//            hidItem = new HidItem(getApplicationContext());
+//            try {
+//                hidItem.setProductID((short) 00001);
+//                hidItem.setVendorID((short) 00001);
+//
+//                hidItem.open();
+//
+//                byte[] dataToSend = "Hello, Printer!".getBytes();
+//                hidItem.writeBuffer(dataToSend, 0, dataToSend.length);
+//
+//                ByteArrayOutputStream receivedData = new ByteArrayOutputStream();
+//                int bytesRead = hidItem.readBuffer(receivedData, 1000); // 1000ms timeout
+//                if (bytesRead > 0) {
+//                    Log.d("YourActivity", "Received data: " + receivedData.toString());
+//                } else {
+//                    Log.d("YourActivity", "No data received within the timeout");
+//                }
+//            } catch (Exception e) {
+//                Log.d("MainActivity", "initializeApp: " + e.getMessage());
             }
-
-        } else {
-            Log.i("MainActivity", "bindService() called unsuccessfully");
-        }
+//
+//        } else {
+//            Log.i("MainActivity", "bindService() called unsuccessfully");
+//        }
     }
 
     protected void CloseService() {
@@ -134,6 +138,38 @@ public class MainActivity extends AppCompatActivity {
 
         Log.w("MainActivity", "writeConfig() called successfully");
 
+    }
+
+    private void performUsbInteraction() {
+        // Find USB Device
+        short productId = 001;
+        short vendorId = 001;
+
+        UsbManager usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
+        HidItem usbDevice = new HidItem(this);
+        usbDevice.setProductID(productId);
+        usbDevice.setVendorID(vendorId);
+
+        // Check if the USB device is found
+        if (HidItem.findDevice(usbManager, productId, vendorId) != null) {
+            try {
+                // Open the USB connection
+                usbDevice.open();
+
+                // Send data
+                String dataToSend = "Hello, USB Device!";
+                usbDevice.writeBuffer(dataToSend.getBytes(), 0, dataToSend.length());
+            } catch (Exception e) {
+                e.printStackTrace();
+                // Handle exceptions
+            } finally {
+                // Close the USB connection
+                usbDevice.close();
+            }
+        } else {
+            Log.e(TAG, "USB device not found.");
+            // Handle accordingly
+        }
     }
 
     private void simulatePairing(String sModeCode) {

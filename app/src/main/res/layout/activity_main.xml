@@ -32,7 +32,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="52dp"
-        android:text="Write Config"
+        android:text="Send help"
         app:layout_constraintTop_toTopOf="@+id/button"
         tools:layout_editor_absoluteX="151dp" />
 

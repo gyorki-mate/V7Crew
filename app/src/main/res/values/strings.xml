@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">V7Crew</string>
+    <string name="notification_text">Dummy message</string>
+</resources>
